@@ -1,3 +1,4 @@
+use colored::{self, Colorize};
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -56,10 +57,30 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     };
 
     for line in results {
-        println!("{line}");
+        let formatted_line = highlight_matches(line, &config.query, &config.ignore_case);
+        println!("{}", formatted_line);
     }
 
     Ok(())
+}
+
+fn highlight_matches(line: &str, query: &str, ignore_case: &bool) -> String {
+    if *ignore_case {
+        let line_lower = line.to_lowercase();
+        let query_lower = query.to_lowercase();
+        let mut result = String::new();
+        let mut end = 0;
+
+        for (idx, string) in line_lower.match_indices(&query_lower) {
+            result.push_str(&line[end..idx]);
+            result.push_str(&string.red().to_string());
+            end = idx + query.len();
+        }
+        result.push_str(&line[end..]);
+        result
+    } else {
+        line.replace(query, &query.red().to_string())
+    }
 }
 
 #[cfg(test)]
