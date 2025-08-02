@@ -1,8 +1,6 @@
-use minigrep::search;
-use minigrep::search_case_insensitive;
+use minigrep::Config;
+use minigrep::run;
 use std::env;
-use std::error::Error;
-use std::fs;
 use std::process;
 
 fn main() {
@@ -17,48 +15,3 @@ fn main() {
     };
 }
 
-fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let content = fs::read_to_string(config.file_path)?;
-
-    let results = if config.ignore_case {
-        search_case_insensitive(&config.query, &content)
-    } else {
-        search(&config.query, &content)
-    };
-
-    for line in results {
-        println!("{line}");
-    }
-
-    Ok(())
-}
-
-struct Config {
-    query: String,
-    file_path: String,
-    ignore_case: bool,
-}
-
-impl Config {
-    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
-        args.next();
-
-        let query = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get a query string")
-        };
-
-        let file_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get a file path"),
-        };
-
-        let ignore_case = env::var("IGNORE_CASE").is_ok();
-
-        Ok(Config {
-            query: query,
-            file_path: file_path,
-            ignore_case: ignore_case,
-        })
-    }
-}
